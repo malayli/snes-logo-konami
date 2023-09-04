@@ -2,6 +2,7 @@
 
 
     Konami Logo for SNES Projects
+    Author: digifox
 
 
 ---------------------------------------------------------------------------------*/
@@ -284,9 +285,7 @@ u16 redLogoPalette[] = {
     RGB5(0x0E, 0x01, 0x02),
 };
 
-u16 logoTimer;
-u16 logoIndex;
-u16 logoPosX;
+u16 framesCounter;
 u8 logoBackgroundColor;
 u8 logoFlagsSpeed;
 u8 logoFlagsTimer;
@@ -296,159 +295,32 @@ u16 logoFirePosY;
 u16 logoFirePosYOffset;
 u16 logoLineOffset;
 u16 logoBuffer1[] = { 5 | (PAL6<<10), 6 | (PAL6<<10) };
-u16 logoBuffer2[] = { 18 | (PAL6<<10), 19 | (PAL6<<10) };
 LogoState logoState;
 u8 logoFireState;
-u16 bg2TileMap[1024];
 u16 bg3TileMap[1024];
 u16 palEntryTemp;
 u16 bgTileIndex;
 
+/*!\brief Load the logo music.
+*/
 void initLogoMusic() {
     spcSetBank(&SOUNDBANK__);
     spcLoad(0);
 }
 
-void initBackgroundPalette(u8 *source, u16 tilePaletteNumber) {
-    palEntryTemp = tilePaletteNumber<<4;
-    dmaCopyCGram(source, palEntryTemp, 32);
-}
-
-/*!\brief Print text on BG2 and set priority.
-    \param x the X position
-    \param y the Y position
-    \param number the tile number to print (u8)
+/*!\brief Copy the given background palette to CGRAM.
+    \param palette the palette data
     \param paletteNumber the palette number
-    \param priority the tile priority
 */
-void bg2PrintInt(u16 x, u16 y, u8 number, u8 paletteNumber, u8 priority) {
-    ((u16 *)bg2TileMap)[x + (y<<5)] = number | (paletteNumber<<10) | (priority<<13);
+void initBackgroundPalette(u8 *palette, u16 paletteNumber) {
+    dmaCopyCGram(palette, paletteNumber<<4, 32);
 }
 
-void printCompanyLogo(u16 x, u16 y, u8 paletteNumber) {
-    logoIndex = 0;
-    logoPosX = x;
-    bg2PrintInt(logoPosX, y, 68, paletteNumber, 0);
-
-    logoIndex = 1;
-    logoPosX = x + 1;
-    while(logoIndex < 18) {
-        bg2PrintInt(logoPosX, y, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x;
-    while(logoIndex < 35) {
-        bg2PrintInt(logoPosX, y + 1, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x;
-    while(logoIndex < 52) {
-        bg2PrintInt(logoPosX, y + 2, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x;
-    while(logoIndex < 59) {
-        bg2PrintInt(logoPosX, y + 3, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    bg2PrintInt(logoPosX, y + 3, 52, paletteNumber, 0);
-
-    logoPosX += 1;
-    while(logoIndex < 68) {
-        bg2PrintInt(logoPosX, y + 3, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-}
-
-void printCompanyFlag(u16 x, u16 y, u8 paletteNumber) {
-    logoIndex = 69;
-    logoPosX = x;
-    while(logoIndex < 76) {
-        bg2PrintInt(logoPosX, y, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x;
-    while(logoIndex < 83) {
-        bg2PrintInt(logoPosX, y + 1, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x;
-    while(logoIndex < 90) {
-        bg2PrintInt(logoPosX, y + 2, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x - 1;
-    while(logoIndex < 97) {
-        bg2PrintInt(logoPosX, y + 3, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x - 3;
-    while(logoIndex < 105) {
-        bg2PrintInt(logoPosX, y + 4, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x - 6;
-    while(logoIndex < 115) {
-        bg2PrintInt(logoPosX, y + 5, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x - 7;
-    while(logoIndex < 122) {
-        bg2PrintInt(logoPosX, y + 6, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x - 8;
-    while(logoIndex < 129) {
-        bg2PrintInt(logoPosX, y + 7, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x - 8;
-    while(logoIndex < 136) {
-        bg2PrintInt(logoPosX, y + 8, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x - 8;
-    while(logoIndex < 143) {
-        bg2PrintInt(logoPosX, y + 9, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-
-    logoPosX = x - 8;
-    while(logoIndex < 150) {
-        bg2PrintInt(logoPosX, y + 10, logoIndex, paletteNumber, 0);
-        logoPosX += 1;
-        logoIndex += 1;
-    }
-}
-
+/*!\brief Insert an element in an array.
+    \param array the array of elements.
+    \param index the index of the element to insert.
+    \param value the value of the element to insert.
+*/
 void insertElement(u16 array[], u8 index, u16 value) {
     // Shift elements to make space for the new element
     logoElementIndex = 6;
@@ -470,7 +342,7 @@ void clearBgTextEx(u16 *tileMap, u8 paletteNumber, u8 priority) {
     }
 }
 
-/*!\brief Create a white background on B3.
+/*!\brief Create a black background on B3.
 */
 void initBg3Black() {
     bgSetMapPtr(BG2, 0x0000 + 2048, SC_32x32);
@@ -482,11 +354,13 @@ void initBg3Black() {
     dmaCopyVram((u8 *)emptyPicture, 0x5000, 32);
 }
 
-void initLogo() {
+/*!\brief Initialize the Konami logo screen.
+*/
+void initKonamiLogo() {
     dmaClearVram();
 
     logoState = LogoStateStart;
-    logoTimer = 0;
+    framesCounter = 0;
     logoFlagsSpeed = 0;
     logoFirePosX = 256;
     logoFirePosY = 256;
@@ -531,10 +405,6 @@ void initLogo() {
     WaitForVBlank();
     initLogoMusic();
     WaitForVBlank();
-
-    //printCompanyFlag(13, 4, PAL4);
-    //printCompanyFlag(18, 9, PAL5);
-    //printCompanyLogo(7, 21, PAL3);
     
     setMode(BG_MODE1, 0);
     bgSetDisable(BG0);
@@ -546,7 +416,10 @@ void initLogo() {
 	WaitForVBlank();
 }
 
-void updateLogo() {
+/*!\brief Update the Konami logo animation.
+    \return 1 when the logo animation is complete, 0 otherwise.
+*/
+u8 updateKonamiLogo() {
     switch(logoState) {
         case LogoStateStart:
             bgSetScroll(BG0, 256, 0);
@@ -643,13 +516,13 @@ void updateLogo() {
             break;
 
         case LogoStateDark:
-            if (logoTimer == 128 + 60) {
+            if (framesCounter == 128 + 60) {
                 dmaCopyCGram(&companyLogoPalette + 32, PAL4<<4, 32);
 
-            } else if (logoTimer == 129 + 60) {
+            } else if (framesCounter == 129 + 60) {
                 dmaCopyCGram(&companyLogoPalette + 64, PAL5<<4, 32);
 
-            } else if (logoTimer == 130 + 60) {
+            } else if (framesCounter == 130 + 60) {
                 logoState = LogoStateWillChangeLogoFlags;
                 logoFlagsTimer = 0;
                 spcPlay(0);
@@ -707,13 +580,21 @@ void updateLogo() {
             break;
     }
 
-    if (logoTimer == 300) {
+    if (framesCounter < 300) {
+        spcProcess();
+
+    } else if (framesCounter == 300) {
         spcStop();
-        spcSetModuleVolume(0); // Workaround to fix glitch when music is stopped
 
-    } else if (logoTimer == 330) {
-        // Load next screen
+    } else if (framesCounter == 301) {
+        // Note: process spcStop() properly.
+        spcProcess();
+
+    } else if (framesCounter == 330) {
+        return 1;
     }
+    
+    framesCounter++;
 
-    logoTimer++;
+    return 0;
 }

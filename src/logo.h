@@ -1,2 +1,2 @@
-void initLogo();
-void updateLogo();
+void initKonamiLogo();
+u8 updateKonamiLogo();
